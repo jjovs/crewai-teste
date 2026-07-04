@@ -60,4 +60,4 @@ O resultado final (resumo de 3 parágrafos, já revisado) é exibido no terminal
 3. O agente **Revisor** recebe o resumo do redator e verifica se ele tem exatamente 3 parágrafos e se o texto está claro e coeso. Se não estiver, ele ajusta o texto antes de retornar a versão final.
 4. O `Crew` executa as três tarefas em sequência (`Process.sequential`) e retorna o resultado final já revisado.
 
-Por padrão, o modelo usado é o `claude-sonnet-5`. Para trocar de modelo, edite a linha `llm = LLM(model="anthropic/claude-sonnet-5")` em `main.py`.
+Por padrão, o modelo usado é o `claude-sonnet-5`. Para trocar de modelo, mude a linha `llm = LLM(model="anthropic/claude-sonnet-5")` em `main.py`.
