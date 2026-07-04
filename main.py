@@ -22,7 +22,7 @@ if not os.getenv("ANTHROPIC_API_KEY"):
         "(veja o README.md para instrucoes)."
     )
 
-llm = LLM(model="anthropic/claude-opus-4-8")
+llm = LLM(model="anthropic/claude-sonnet-5")
 
 pesquisador = Agent(
     role="Pesquisador",

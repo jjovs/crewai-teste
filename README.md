@@ -58,4 +58,4 @@ O resultado final (resumo de 3 parágrafos) é exibido no terminal ao final da e
 2. O agente **Redator** recebe essa pesquisa como contexto e escreve um resumo de exatamente 3 parágrafos.
 3. O `Crew` executa as duas tarefas em sequência (`Process.sequential`) e retorna o resultado final.
 
-Por padrão, o modelo usado é o `claude-opus-4-8`. Para trocar de modelo, edite a linha `llm = LLM(model="anthropic/claude-opus-4-8")` em `main.py`.
+Por padrão, o modelo usado é o `claude-sonnet-5`. Para trocar de modelo, edite a linha `llm = LLM(model="anthropic/claude-sonnet-5")` em `main.py`.
