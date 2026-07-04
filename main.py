@@ -1,5 +1,7 @@
-"""Exemplo simples de CrewAI: um pesquisador busca informacoes sobre um tema
-e um redator transforma essas informacoes em um resumo de 3 paragrafos.
+"""Exemplo simples de CrewAI: um pesquisador busca informacoes sobre um tema,
+um redator transforma essas informacoes em um resumo de 3 paragrafos, e um
+revisor confere se o resumo esta com exatamente 3 paragrafos e um texto
+claro e coeso, ajustando-o quando necessario.
 
 Requer a variavel de ambiente ANTHROPIC_API_KEY definida (ver README.md).
 """
@@ -49,6 +51,22 @@ redator = Agent(
     verbose=True,
 )
 
+revisor = Agent(
+    role="Revisor",
+    goal=(
+        "Garantir que o resumo final tenha exatamente 3 paragrafos e que o "
+        "texto esteja claro e coeso"
+    ),
+    backstory=(
+        "Voce e um revisor de textos criterioso e atento aos detalhes. Voce "
+        "confere a estrutura e a qualidade de um texto e, quando necessario, "
+        "reescreve trechos para melhorar a clareza e a coesao, sem perder "
+        "informacoes importantes do conteudo original."
+    ),
+    llm=llm,
+    verbose=True,
+)
+
 tarefa_pesquisa = Task(
     description=(
         "Pesquise sobre o tema '{tema}'. Reuna os principais fatos, dados, "
@@ -71,9 +89,24 @@ tarefa_redacao = Task(
     context=[tarefa_pesquisa],
 )
 
+tarefa_revisao = Task(
+    description=(
+        "Revise o resumo escrito pelo redator sobre '{tema}'. Verifique se ele "
+        "tem exatamente 3 paragrafos e se o texto esta claro e coeso. Se "
+        "estiver tudo certo, retorne o texto como esta. Se algo estiver errado "
+        "(numero incorreto de paragrafos, falta de clareza ou de coesao), "
+        "ajuste o texto e retorne a versao corrigida."
+    ),
+    expected_output=(
+        "A versao final do resumo, com exatamente 3 paragrafos, clara e coesa."
+    ),
+    agent=revisor,
+    context=[tarefa_redacao],
+)
+
 crew = Crew(
-    agents=[pesquisador, redator],
-    tasks=[tarefa_pesquisa, tarefa_redacao],
+    agents=[pesquisador, redator, revisor],
+    tasks=[tarefa_pesquisa, tarefa_redacao, tarefa_revisao],
     process=Process.sequential,
     verbose=True,
 )

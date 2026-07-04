@@ -1,9 +1,10 @@
 # crewai-teste
 
-Exemplo simples de [CrewAI](https://github.com/crewAIInc/crewAI) com dois agentes:
+Exemplo simples de [CrewAI](https://github.com/crewAIInc/crewAI) com três agentes:
 
 - **Pesquisador**: busca informações sobre um tema.
 - **Redator**: transforma essas informações em um resumo de 3 parágrafos.
+- **Revisor**: confere se o resumo final tem exatamente 3 parágrafos e se o texto está claro e coeso, ajustando-o quando necessário.
 
 O projeto usa a API da Anthropic (Claude) como LLM, via a variável de ambiente `ANTHROPIC_API_KEY`.
 
@@ -50,12 +51,13 @@ python main.py "Tema que você quer pesquisar"
 
 Se nenhum tema for passado como argumento, o script usa um tema padrão ("Inteligência Artificial na educação").
 
-O resultado final (resumo de 3 parágrafos) é exibido no terminal ao final da execução.
+O resultado final (resumo de 3 parágrafos, já revisado) é exibido no terminal ao final da execução.
 
 ## Como funciona
 
 1. O agente **Pesquisador** recebe o tema e levanta os principais fatos e pontos relevantes.
 2. O agente **Redator** recebe essa pesquisa como contexto e escreve um resumo de exatamente 3 parágrafos.
-3. O `Crew` executa as duas tarefas em sequência (`Process.sequential`) e retorna o resultado final.
+3. O agente **Revisor** recebe o resumo do redator e verifica se ele tem exatamente 3 parágrafos e se o texto está claro e coeso. Se não estiver, ele ajusta o texto antes de retornar a versão final.
+4. O `Crew` executa as três tarefas em sequência (`Process.sequential`) e retorna o resultado final já revisado.
 
 Por padrão, o modelo usado é o `claude-sonnet-5`. Para trocar de modelo, edite a linha `llm = LLM(model="anthropic/claude-sonnet-5")` em `main.py`.
