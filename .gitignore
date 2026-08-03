@@ -11,6 +11,9 @@ __pycache__/
 build/
 dist/
 
+# Saida gerada pelo time de agentes
+saida/
+
 # Editor/OS
 .vscode/
 .idea/
