@@ -5,3 +5,8 @@ python-dotenv>=1.0.1
 # Opcional: da busca web real ao Pesquisador.
 # Instale e defina SERPER_API_KEY para ativar (ver README.md).
 # crewai-tools>=0.40.0
+
+# Opcional: da navegador real a Lila e ao Rui (ver README-equipe.md).
+# Sem isso, as personas caem em modo simulacao.
+#   pip install playwright && playwright install chromium
+# playwright>=1.48

@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 MODELO_PADRAO = "anthropic/claude-sonnet-5"
 
@@ -34,8 +35,18 @@ class Config:
     arquivos do Theo e vice-versa. Vazios, os dois usam `diretorios_de_ui`."""
 
     url_do_app: str | None = None
-    """URL do app rodando localmente, ex: http://localhost:3000. Sem isso, Lila
+    """URL do app rodando localmente, ex: http://localhost:5173. Sem isso, Lila
     e Rui rodam em modo simulacao, sem tocar no app."""
+
+    credenciais: dict[str, Any] = field(default_factory=dict)
+    """Login por persona: {"Lila": Credencial(...), "Rui": Credencial(...)}.
+    Vazio usa os usuarios de seed do ConnoSr."""
+
+    rota_de_login: Any = None
+    """Como logar no app (RotaDeLogin). None usa o preset do ConnoSr."""
+
+    headless: bool = True
+    """False abre o navegador na tela - util para assistir as personas usando o app."""
 
     # --- comportamento da rodada -------------------------------------------
     foco: str = "melhorar a experiencia social do feed de avaliacoes"
@@ -67,6 +78,25 @@ class Config:
         """True quando Lila e Rui podem interagir com o app rodando."""
         return bool(self.url_do_app)
 
+    @classmethod
+    def para_connosr(cls, repo: Path, **kw: Any) -> "Config":
+        """Preset do projeto ConnoSr (monorepo pnpm: web em Vite, API em Fastify).
+
+        A divisao de cercas segue como o codigo esta organizado hoje: os estilos
+        sao objetos inline dentro dos componentes, entao nao da para separar
+        'estrutura' de 'visual' por arquivo. Separamos por pasta:
+
+            Theo -> componentes reutilizaveis + design tokens
+            Iris -> paginas e layouts (fluxo, navegacao, estados de tela)
+        """
+        return cls(
+            repo_alvo=repo,
+            diretorios_de_theo=["apps/web/src/components", "packages/ui/src"],
+            diretorios_de_iris=["apps/web/src/pages", "apps/web/src/layouts"],
+            url_do_app=kw.pop("url_do_app", "http://localhost:5173"),
+            **kw,
+        )
+
     def validar(self) -> list[str]:
         """Devolve avisos sobre o que esta faltando para a rodada ser completa."""
         avisos: list[str] = []
@@ -80,10 +110,13 @@ class Config:
             avisos.append(
                 "Sem repo alvo: Iris e Theo entregam especificacao, nao codigo."
             )
-        if self.modo_codigo and not self.diretorios_de_ui:
-            avisos.append(
-                "diretorios_de_ui vazio: por seguranca, nenhuma escrita sera permitida."
-            )
+        if self.modo_codigo:
+            sem_cerca = [n for n in ("Iris", "Theo") if not self.cerca_de(n)]
+            if sem_cerca:
+                avisos.append(
+                    f"sem diretorio autorizado para {', '.join(sem_cerca)}: "
+                    "por seguranca, nenhuma escrita sera permitida."
+                )
         if not self.modo_navegador:
             avisos.append(
                 "Sem url_do_app: Lila e Rui simulam a sessao em vez de usar o app real."

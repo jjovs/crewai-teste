@@ -86,6 +86,34 @@ Com isso a divisão de escopo deixa de ser instrução no prompt e vira regra t�
 
 Sem `--ui`, nenhuma escrita é permitida. É o padrão: a cerca é opt-in.
 
+## As personas no app de verdade
+
+Lila e Rui interagem dentro do app rodando, cada uma com **login próprio**. É o que permite a Lila publicar uma avaliação e o Rui encontrar aquele post no feed dele e comentar.
+
+Ferramentas de cada persona: `abrir_pagina`, `ver_tela`, `clicar`, `preencher`, `rolar`. Viewport de celular (390×844) — é assim que se usa uma rede social.
+
+Detalhe técnico que custou um bug: **um único Chromium, um contexto por persona**. Chamar `sync_playwright().start()` duas vezes no mesmo processo morre com *"Sync API inside the asyncio loop"*. Contexto do Playwright já isola cookies e storage, então cada persona tem sessão de login real de verdade.
+
+```bash
+pip install playwright && playwright install chromium
+```
+
+Sem Playwright instalado, `sessoes_de_navegador` devolve `None` e as personas caem em modo simulação. Se você já tem um Chromium em outro lugar, aponte `PLAYWRIGHT_EXECUTABLE_PATH` para ele em vez de baixar outro.
+
+## Preset do ConnoSr
+
+`Config.para_connosr(repo)` já vem configurado para o projeto:
+
+| | |
+|---|---|
+| Cerca do **Theo** | `apps/web/src/components`, `packages/ui/src` |
+| Cerca da **Íris** | `apps/web/src/pages`, `apps/web/src/layouts` |
+| App | `http://localhost:5173` |
+| Login | placeholders `Email` / `Senha`, botão `Entrar`, rota `/login` |
+| Personas | Lila = `alice@example.com`, Rui = `bruno@example.com` (usuários de seed) |
+
+A divisão por pasta, e não por "estrutura vs visual", é deliberada: no ConnoSr os estilos são objetos inline dentro dos componentes, então não existe fronteira de arquivo entre layout e aparência. Separando por pasta, os dois trabalham em paralelo sem se sobrescrever.
+
 ## Estado da implementação
 
 Pronto e verificado contra o CrewAI 1.15.11:
@@ -93,10 +121,10 @@ Pronto e verificado contra o CrewAI 1.15.11:
 - os seis agentes, o fluxo com loop de revisão e os contratos Pydantic
 - o painel: métricas por agente a partir de eventos reais do barramento, servidor SSE e interface
 - as ferramentas de código cercadas (listar, ler, buscar, escrever com diff)
+- as ferramentas de navegador, verificadas com duas personas logadas em contextos separados: Lila publicou e Rui viu o post dela
 
-Ainda **não** implementado, porque depende do repositório alvo:
+Ainda **não** implementado:
 
-- **ferramentas de navegador** para Lila e Rui (Playwright ou API do app, autenticação, dados de teste)
-- **branch + PR** ao fim da rodada, que depende da convenção do repositório
+- **branch + PR** ao fim da rodada — depende de acesso de escrita ao repositório alvo e da convenção que o time usa
 
-Sem essas peças o time roda em modo simulação para as personas, que já produz pauta, design (com código real, se houver cerca), sessão simulada e parecer da Vera.
+Nunca foi executada uma rodada real de ponta a ponta: isso consome API da Anthropic e o app alvo precisa estar no ar. O que está verificado é cada peça isoladamente, contra o CrewAI e o Playwright de verdade.

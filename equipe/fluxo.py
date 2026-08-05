@@ -22,7 +22,12 @@ from crewai.flow.flow import Flow, listen, or_, router, start
 
 from equipe.agentes import Equipe, montar_equipe
 from equipe.config import Config
-from equipe.ferramentas import EscreverArquivo, ferramentas_de_codigo
+from equipe.ferramentas import ferramentas_de_codigo
+from equipe.navegador import (
+    CREDENCIAIS_CONNOSR,
+    ROTA_CONNOSR,
+    sessoes_de_navegador,
+)
 from equipe.modelos import (
     CacaDeIdeias,
     EntregaDeDesign,
@@ -46,10 +51,20 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
         self._painel = painel
         self._kit_iris = ferramentas_de_codigo(config.repo_alvo, config.cerca_de("Iris"))
         self._kit_theo = ferramentas_de_codigo(config.repo_alvo, config.cerca_de("Theo"))
+        self._kits_app = sessoes_de_navegador(
+            config.url_do_app,
+            config.credenciais or CREDENCIAIS_CONNOSR,
+            config.rota_de_login or ROTA_CONNOSR,
+            headless=config.headless,
+        )
+        lila = self._kits_app.get("Lila") if self._kits_app else None
+        rui = self._kits_app.get("Rui") if self._kits_app else None
         self._equipe = equipe or montar_equipe(
             config,
             ferramentas_de_iris=self._kit_iris.ferramentas if self._kit_iris else None,
             ferramentas_de_theo=self._kit_theo.ferramentas if self._kit_theo else None,
+            ferramentas_de_lila=lila.ferramentas if lila else None,
+            ferramentas_de_rui=rui.ferramentas if rui else None,
         )
 
     # --- 1. Caio cacar ideias ----------------------------------------------
@@ -60,7 +75,7 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
         self.state.foco = cfg.foco
         self.state.max_rodadas = cfg.max_rodadas
         self.state.modo_codigo = cfg.modo_codigo
-        self.state.modo_navegador = cfg.modo_navegador
+        self.state.modo_navegador = self._kits_app is not None
 
         tarefa = Task(
             description=(
@@ -311,6 +326,8 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
 
     @listen("aprovado")
     def entregar(self) -> EstadoDaRodada:
+        if self._kits_app is not None:
+            self._kits_app.fechar()
         self.state.registrar(f"Rodada encerrada por {self.state.encerrada_por}")
         if self._painel:
             self._painel.registrar_evento(f"encerrado: {self.state.encerrada_por}")
