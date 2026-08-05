@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipe — painel ao vivo</title>
+<style>
+  :root {
+    --bg: #0f1115; --card: #171a21; --linha: #262b36; --texto: #e6e8ec;
+    --fraco: #8b93a3; --acento: #6ea8fe; --ok: #4ade80; --alerta: #fbbf24;
+    --erro: #f87171; --ocioso: #4b5563;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f7f9; --card: #fff; --linha: #e3e6eb; --texto: #1a1d23;
+      --fraco: #6b7280; --acento: #2563eb; --ocioso: #9ca3af;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: var(--bg); color: var(--texto);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; margin-bottom: 20px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  .meta { color: var(--fraco); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .meta b { color: var(--texto); font-weight: 600; }
+  #conexao { margin-left: auto; font-size: 12px; color: var(--fraco); }
+  #conexao.on::before { content: "● "; color: var(--ok); }
+  #conexao.off::before { content: "● "; color: var(--erro); }
+
+  .grade { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .cartao {
+    background: var(--card); border: 1px solid var(--linha); border-radius: 12px;
+    padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    border-left: 3px solid var(--ocioso); transition: border-color .2s;
+  }
+  .cartao.trabalhando { border-left-color: var(--acento); }
+  .cartao.concluido   { border-left-color: var(--ok); }
+  .cartao.erro        { border-left-color: var(--erro); }
+  .topo { display: flex; align-items: baseline; gap: 8px; }
+  .nome { font-size: 17px; font-weight: 650; }
+  .papel { color: var(--fraco); font-size: 12px; }
+  .selo {
+    margin-left: auto; font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+    padding: 3px 8px; border-radius: 99px; background: var(--linha); color: var(--fraco);
+    white-space: nowrap;
+  }
+  .trabalhando .selo { background: color-mix(in srgb, var(--acento) 20%, transparent); color: var(--acento); }
+  .concluido .selo   { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+  .erro .selo        { background: color-mix(in srgb, var(--erro) 20%, transparent); color: var(--erro); }
+  .atividade { font-size: 13px; color: var(--fraco); min-height: 20px; }
+  .atividade b { color: var(--texto); font-weight: 500; }
+
+  .numeros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .num { text-align: center; }
+  .num .v { font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .num .r { font-size: 10px; color: var(--fraco); text-transform: uppercase; letter-spacing: .04em; }
+  .barra { height: 4px; background: var(--linha); border-radius: 99px; overflow: hidden; }
+  .barra > i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .3s; }
+  .qualidade { font-size: 12px; color: var(--fraco); display: flex; justify-content: space-between; gap: 8px; }
+
+  .rodape { margin-top: 22px; display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .caixa { background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 16px; }
+  .caixa h2 { font-size: 13px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--fraco); }
+  #linha { max-height: 260px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column-reverse; gap: 2px; }
+  #linha div { display: flex; gap: 10px; padding: 3px 0; border-bottom: 1px solid var(--linha); }
+  #linha span { color: var(--fraco); font-variant-numeric: tabular-nums; min-width: 52px; text-align: right; }
+  .vazio { color: var(--fraco); font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Equipe — painel ao vivo</h1>
+  <div class="meta">
+    <span>rodada <b id="rodada">—</b></span>
+    <span>etapa <b id="etapa">—</b></span>
+    <span>tempo <b id="decorrido">0s</b></span>
+    <span>tokens <b id="tokens">0</b></span>
+  </div>
+  <div id="conexao" class="off">conectando…</div>
+</header>
+
+<div class="grade" id="grade"></div>
+
+<div class="rodape">
+  <div class="caixa">
+    <h2>Linha do tempo</h2>
+    <div id="linha"><div class="vazio">aguardando a primeira rodada…</div></div>
+  </div>
+</div>
+
+<script>
+const ROTULOS = {
+  ocioso: "ocioso", trabalhando: "trabalhando",
+  concluido: "concluído", erro: "erro"
+};
+
+function tempo(s) {
+  if (s < 60) return s.toFixed(0) + "s";
+  const m = Math.floor(s / 60);
+  return m + "m " + Math.round(s % 60) + "s";
+}
+function milhar(n) { return (n || 0).toLocaleString("pt-BR"); }
+
+function cartao(a) {
+  const el = document.createElement("div");
+  el.className = "cartao " + a.estado;
+  el.id = "ag-" + a.nome;
+
+  const taxa = a.taxaDeAprovacao;
+  const detalhe = a.ferramentaAtual
+    ? `usando <b>${a.ferramentaAtual}</b>`
+    : (a.tarefaAtual ? `em <b>${a.tarefaAtual}</b>` : (a.ultimaAtividade || "—"));
+
+  el.innerHTML = `
+    <div class="topo">
+      <span class="nome">${a.nome}</span>
+      <span class="selo">${ROTULOS[a.estado] || a.estado}</span>
+    </div>
+    <div class="papel">${(a.papel || "").replace(/^[^-]*-\s*/, "") || "&nbsp;"}</div>
+    <div class="atividade">${detalhe}</div>
+    <div class="numeros">
+      <div class="num"><div class="v">${tempo(a.segundos)}</div><div class="r">tempo</div></div>
+      <div class="num"><div class="v">${a.execucoes}</div><div class="r">execuções</div></div>
+      <div class="num"><div class="v">${milhar(a.tokens)}</div><div class="r">tokens</div></div>
+      <div class="num"><div class="v">${a.erros}</div><div class="r">erros</div></div>
+    </div>
+    ${taxa === null ? "" : `
+      <div class="barra"><i style="width:${taxa}%"></i></div>
+      <div class="qualidade">
+        <span>aprovação de 1ª: <b>${taxa}%</b></span>
+        <span>${a.entregas} entrega(s), ${a.devolucoes} devolvida(s)</span>
+      </div>`}
+    ${a.atritosEncontrados ? `<div class="qualidade"><span>atritos encontrados</span><b>${a.atritosEncontrados}</b></div>` : ""}
+  `;
+  return el;
+}
+
+function pintar(d) {
+  document.getElementById("rodada").textContent =
+    d.rodada ? `${d.rodada}/${d.maxRodadas}` : "—";
+  document.getElementById("etapa").textContent = d.etapa || "—";
+  document.getElementById("decorrido").textContent = tempo(d.decorrido || 0);
+  document.getElementById("tokens").textContent =
+    milhar((d.agentes || []).reduce((s, a) => s + (a.tokens || 0), 0));
+
+  const grade = document.getElementById("grade");
+  grade.replaceChildren(...(d.agentes || []).map(cartao));
+
+  const linha = document.getElementById("linha");
+  const itens = d.linhaDoTempo || [];
+  if (itens.length) {
+    linha.replaceChildren(...itens.map(e => {
+      const div = document.createElement("div");
+      div.innerHTML = `<span>${tempo(e.em)}</span><em>${e.texto}</em>`;
+      return div;
+    }));
+  }
+}
+
+const conexao = document.getElementById("conexao");
+function conectar() {
+  const es = new EventSource("/eventos");
+  es.onopen = () => { conexao.className = "on"; conexao.textContent = "ao vivo"; };
+  es.onmessage = e => pintar(JSON.parse(e.data));
+  es.onerror = () => {
+    conexao.className = "off"; conexao.textContent = "reconectando…";
+    es.close(); setTimeout(conectar, 2000);
+  };
+}
+conectar();
+</script>
+</body>
+</html>

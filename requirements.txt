@@ -1,4 +1,5 @@
-crewai[anthropic]>=0.108.0
+# O pacote equipe/ usa crewai.events e Flow, que exigem a linha 1.x.
+crewai[anthropic]>=1.15.0
 python-dotenv>=1.0.1
 
 # Opcional: da busca web real ao Pesquisador.
