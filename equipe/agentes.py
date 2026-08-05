@@ -34,16 +34,23 @@ class Equipe:
         return [self.caio, self.vera, self.iris, self.theo, self.lila, self.rui]
 
 
-def montar_equipe(config: Config, ferramentas_de_codigo=None, ferramentas_de_app=None) -> Equipe:
+def montar_equipe(
+    config: Config,
+    ferramentas_de_iris=None,
+    ferramentas_de_theo=None,
+    ferramentas_de_app=None,
+) -> Equipe:
     """Constroi os seis agentes.
 
-    `ferramentas_de_codigo` vai para Iris e Theo (edicao de arquivos do repo alvo).
-    `ferramentas_de_app` vai para Lila e Rui (interacao com o app rodando).
-    Quando None, os agentes trabalham em modo proposta / simulacao.
+    Iris e Theo recebem kits de codigo SEPARADOS, cada um com a sua cerca: isso
+    torna a divisao de escopo uma regra tecnica, nao apenas uma instrucao.
+    `ferramentas_de_app` vai para Lila e Rui. Quando None, os agentes trabalham
+    em modo proposta / simulacao.
     """
     llm = LLM(model=config.modelo, temperature=0.5)
     llm_criativo = LLM(model=config.modelo, temperature=0.8)
-    codigo = ferramentas_de_codigo or []
+    codigo_iris = ferramentas_de_iris or []
+    codigo_theo = ferramentas_de_theo or []
     app = ferramentas_de_app or []
 
     caio = Agent(
@@ -106,7 +113,7 @@ def montar_equipe(config: Config, ferramentas_de_codigo=None, ferramentas_de_app
             "dependencia em vez de decidir sozinha."
         ),
         llm=llm,
-        tools=codigo,
+        tools=codigo_iris,
         verbose=config.verbose,
         allow_delegation=False,
         max_iter=20,
@@ -128,7 +135,7 @@ def montar_equipe(config: Config, ferramentas_de_codigo=None, ferramentas_de_app
             "conteudo principal e texto de gente opinando."
         ),
         llm=llm,
-        tools=codigo,
+        tools=codigo_theo,
         verbose=config.verbose,
         allow_delegation=False,
         max_iter=20,

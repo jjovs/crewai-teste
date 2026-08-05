@@ -37,6 +37,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("foco", nargs="?", default="melhorar a experiencia social do feed de avaliacoes")
     p.add_argument("--repo", type=Path, default=None, help="Raiz do repositorio da rede social")
     p.add_argument("--ui", nargs="*", default=[], help="Diretorios de UI que Iris e Theo podem editar")
+    p.add_argument("--ui-iris", nargs="*", default=[], help="Cerca so da Iris (sobrepoe --ui para ela)")
+    p.add_argument("--ui-theo", nargs="*", default=[], help="Cerca so do Theo (sobrepoe --ui para ele)")
     p.add_argument("--url-app", default=None, help="URL do app rodando, ex: http://localhost:3000")
     p.add_argument("--rodadas", type=int, default=3, help="Maximo de rodadas antes de encerrar")
     p.add_argument("--porta", type=int, default=8777, help="Porta do painel")
@@ -57,6 +59,8 @@ def main(argv: list[str] | None = None) -> None:
     config = Config(
         repo_alvo=args.repo,
         diretorios_de_ui=list(args.ui),
+        diretorios_de_iris=list(args.ui_iris),
+        diretorios_de_theo=list(args.ui_theo),
         url_do_app=args.url_app,
         foco=args.foco,
         max_rodadas=args.rodadas,

@@ -64,6 +64,7 @@ python rodar_equipe.py "onboarding do primeiro post" \
 |-------|--------|
 | `--repo` | Raiz do projeto alvo. Sem ela, Íris e Theo trabalham em modo proposta |
 | `--ui` | Diretórios que Íris e Theo podem editar — funciona como cerca; nada é escrito fora |
+| `--ui-iris` / `--ui-theo` | Cercas separadas por designer (ver abaixo) |
 | `--url-app` | App rodando. Sem ela, Lila e Rui simulam a sessão |
 | `--rodadas` | Quantas vezes a Vera pode devolver antes de encerrar (padrão 3) |
 | `--porta` | Porta do painel (padrão 8777) |
@@ -71,16 +72,31 @@ python rodar_equipe.py "onboarding do primeiro post" \
 
 Quando falta configuração, `Config.validar()` avisa e a rodada **degrada em vez de quebrar** — modo proposta e modo simulação são caminhos legítimos, não erros.
 
+## A cerca
+
+O projeto alvo pertence a outra pessoa, então as ferramentas de código de Íris e Theo são cercadas: toda leitura e escrita resolve o caminho real (`Path.resolve()`) e é recusada se cair fora dos diretórios autorizados. Testado contra `../`, caminho absoluto, `..` no meio do caminho e **symlink apontando para fora** — todos recusados. O que a leitura recusa também não aparece na listagem.
+
+Cada designer tem a **sua própria** cerca e o **seu próprio** registro:
+
+```bash
+--ui-iris src/components --ui-theo src/styles
+```
+
+Com isso a divisão de escopo deixa de ser instrução no prompt e vira regra técnica: Íris não alcança os arquivos do Theo nem por engano. E como o registro de escrita é por instância, dá para saber quem tocou o quê — o `arquivos_tocados` de cada entrega vem do registro da ferramenta, não do auto-relato do agente, que pode se enganar.
+
+Sem `--ui`, nenhuma escrita é permitida. É o padrão: a cerca é opt-in.
+
 ## Estado da implementação
 
 Pronto e verificado contra o CrewAI 1.15.11:
 
 - os seis agentes, o fluxo com loop de revisão e os contratos Pydantic
 - o painel: métricas por agente a partir de eventos reais do barramento, servidor SSE e interface
+- as ferramentas de código cercadas (listar, ler, buscar, escrever com diff)
 
 Ainda **não** implementado, porque depende do repositório alvo:
 
-- **ferramentas de código** para Íris e Theo (leitura/escrita cercada em `--ui`, branch + PR)
 - **ferramentas de navegador** para Lila e Rui (Playwright ou API do app, autenticação, dados de teste)
+- **branch + PR** ao fim da rodada, que depende da convenção do repositório
 
-Sem essas duas peças o time roda em modo proposta/simulação, que já produz pauta, design especificado, sessão simulada e parecer da Vera.
+Sem essas peças o time roda em modo simulação para as personas, que já produz pauta, design (com código real, se houver cerca), sessão simulada e parecer da Vera.

@@ -22,6 +22,7 @@ from crewai.flow.flow import Flow, listen, or_, router, start
 
 from equipe.agentes import Equipe, montar_equipe
 from equipe.config import Config
+from equipe.ferramentas import EscreverArquivo, ferramentas_de_codigo
 from equipe.modelos import (
     CacaDeIdeias,
     EntregaDeDesign,
@@ -42,8 +43,14 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
     def __init__(self, config: Config, equipe: Equipe | None = None, painel=None, **kw: Any) -> None:
         super().__init__(**kw)
         self._config = config
-        self._equipe = equipe or montar_equipe(config)
         self._painel = painel
+        self._kit_iris = ferramentas_de_codigo(config.repo_alvo, config.cerca_de("Iris"))
+        self._kit_theo = ferramentas_de_codigo(config.repo_alvo, config.cerca_de("Theo"))
+        self._equipe = equipe or montar_equipe(
+            config,
+            ferramentas_de_iris=self._kit_iris.ferramentas if self._kit_iris else None,
+            ferramentas_de_theo=self._kit_theo.ferramentas if self._kit_theo else None,
+        )
 
     # --- 1. Caio cacar ideias ----------------------------------------------
 
@@ -110,6 +117,9 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
         self.state.rodada += 1
         if self._painel:
             self._painel.marcar_rodada(self.state.rodada, self.state.max_rodadas)
+        for kit in (self._kit_iris, self._kit_theo):
+            if kit:
+                kit.limpar_registro()
 
         correcoes = self._texto_das_correcoes()
         modo = (
@@ -154,7 +164,19 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
             [self._equipe.iris, self._equipe.theo], tarefas, contexto=self._contexto_pauta()
         )
         self.state.entregas = [s for s in saidas if isinstance(s, EntregaDeDesign)]
-        self.state.registrar(f"Iris e Theo entregaram (rodada {self.state.rodada})")
+
+        # O agente pode se enganar ao relatar o que editou; o registro da
+        # ferramenta e a verdade. Sobrescrevemos o auto-relato.
+        registros = {"Iris": self._kit_iris, "Theo": self._kit_theo}
+        for entrega in self.state.entregas:
+            kit = registros.get(entrega.autor)
+            if kit is not None:
+                entrega.arquivos_tocados = kit.arquivos_tocados()
+
+        tocados = sum(len(e.arquivos_tocados) for e in self.state.entregas)
+        self.state.registrar(
+            f"Iris e Theo entregaram (rodada {self.state.rodada}, {tocados} arquivo(s) editado(s))"
+        )
 
     # --- 4. Lila e Rui usam o produto --------------------------------------
 

@@ -27,6 +27,12 @@ class Config:
     """Caminhos relativos, dentro do repo alvo, que Iris e Theo podem tocar.
     Funciona como cerca: nenhuma escrita acontece fora daqui."""
 
+    diretorios_de_iris: list[str] = field(default_factory=list)
+    diretorios_de_theo: list[str] = field(default_factory=list)
+    """Cercas por designer. Quando preenchidos, a separacao de escopo deixa de
+    ser so instrucao no prompt e vira regra tecnica: Iris nao alcanca os
+    arquivos do Theo e vice-versa. Vazios, os dois usam `diretorios_de_ui`."""
+
     url_do_app: str | None = None
     """URL do app rodando localmente, ex: http://localhost:3000. Sem isso, Lila
     e Rui rodam em modo simulacao, sem tocar no app."""
@@ -47,6 +53,14 @@ class Config:
     def modo_codigo(self) -> bool:
         """True quando Iris e Theo podem escrever codigo de verdade."""
         return self.repo_alvo is not None and self.repo_alvo.is_dir()
+
+    def cerca_de(self, nome: str) -> list[str]:
+        """Diretorios que um designer pode tocar, com fallback para a cerca comum."""
+        especifica = {
+            "Iris": self.diretorios_de_iris,
+            "Theo": self.diretorios_de_theo,
+        }.get(nome, [])
+        return especifica or self.diretorios_de_ui
 
     @property
     def modo_navegador(self) -> bool:
