@@ -50,19 +50,31 @@ Servidor em biblioteca padrão (`http.server` + SSE), sem FastAPI nem uvicorn.
 ## Como rodar
 
 ```bash
-# modo proposta: Iris e Theo entregam especificação, Lila e Rui simulam a sessão
-python rodar_equipe.py "melhorar a descoberta de avaliações no feed"
+# ConnoSr, modo proposta (padrão): leem o código, não editam nada
+python rodar_equipe.py "fazer o feed parecer vivo no primeiro acesso" \
+    --projeto connosr --repo ../connosr
 
-# modo completo: edição de código real + app rodando
+# ConnoSr, modo código: Íris e Theo editam os arquivos de verdade
 python rodar_equipe.py "onboarding do primeiro post" \
-    --repo ../rede-social \
-    --ui src/components src/styles \
+    --projeto connosr --repo ../connosr --modo codigo
+
+# projeto qualquer, cercas na mão
+python rodar_equipe.py "melhorar a descoberta de avaliações" \
+    --repo ../outro-projeto --ui src/components src/styles \
     --url-app http://localhost:3000
 ```
 
+### Modo proposta vs modo código
+
+O padrão é `--modo proposta`, e ele **não** significa trabalhar às cegas: Íris e Theo mantêm as ferramentas de leitura (`listar`, `ler`, `buscar`) e são instruídos a conferir o código antes de propor. A ferramenta de escrita simplesmente não é construída — não há o que dar errado. Proposta que cita o arquivo e o trecho exato vale muito mais que proposta genérica.
+
+`--modo codigo` acrescenta `escrever_arquivo`, sempre dentro da cerca.
+
 | Opção | Efeito |
 |-------|--------|
-| `--repo` | Raiz do projeto alvo. Sem ela, Íris e Theo trabalham em modo proposta |
+| `--projeto connosr` | Aplica o preset do ConnoSr (cercas, URL, login) |
+| `--modo` | `proposta` (padrão) ou `codigo` |
+| `--repo` | Raiz do projeto alvo. Sem ela, Íris e Theo propõem sem ver o código |
 | `--ui` | Diretórios que Íris e Theo podem editar — funciona como cerca; nada é escrito fora |
 | `--ui-iris` / `--ui-theo` | Cercas separadas por designer (ver abaixo) |
 | `--url-app` | App rodando. Sem ela, Lila e Rui simulam a sessão |

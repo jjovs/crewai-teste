@@ -49,6 +49,10 @@ class Config:
     """False abre o navegador na tela - util para assistir as personas usando o app."""
 
     # --- comportamento da rodada -------------------------------------------
+    permitir_escrita: bool = True
+    """False = modo proposta: Iris e Theo leem o repositorio mas nao editam nada.
+    A ferramenta de escrita nao e sequer construida, entao nao ha o que dar errado."""
+
     foco: str = "melhorar a experiencia social do feed de avaliacoes"
     max_rodadas: int = 3
     """Quantas vezes a Vera pode devolver o trabalho antes de encerrar."""
@@ -61,9 +65,19 @@ class Config:
     abrir_painel: bool = True
 
     @property
-    def modo_codigo(self) -> bool:
-        """True quando Iris e Theo podem escrever codigo de verdade."""
+    def pode_ler_codigo(self) -> bool:
+        """True quando o repo alvo esta acessivel para leitura."""
         return self.repo_alvo is not None and self.repo_alvo.is_dir()
+
+    @property
+    def modo_codigo(self) -> bool:
+        """True quando Iris e Theo podem ESCREVER codigo.
+
+        Em modo proposta eles continuam lendo o repositorio - proposta ancorada
+        no codigo real e muito melhor que proposta baseada em suposicao - mas a
+        ferramenta de escrita nem chega a ser criada.
+        """
+        return self.pode_ler_codigo and self.permitir_escrita
 
     def cerca_de(self, nome: str) -> list[str]:
         """Diretorios que um designer pode tocar, com fallback para a cerca comum."""
@@ -106,9 +120,9 @@ class Config:
             )
         if self.repo_alvo is not None and not self.repo_alvo.is_dir():
             avisos.append(f"repo_alvo nao e um diretorio: {self.repo_alvo}")
-        if not self.modo_codigo:
+        if not self.pode_ler_codigo:
             avisos.append(
-                "Sem repo alvo: Iris e Theo entregam especificacao, nao codigo."
+                "Sem repo alvo: Iris e Theo propoem no escuro, sem ver o codigo atual."
             )
         if self.modo_codigo:
             sem_cerca = [n for n in ("Iris", "Theo") if not self.cerca_de(n)]

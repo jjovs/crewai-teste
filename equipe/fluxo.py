@@ -49,8 +49,12 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
         super().__init__(**kw)
         self._config = config
         self._painel = painel
-        self._kit_iris = ferramentas_de_codigo(config.repo_alvo, config.cerca_de("Iris"))
-        self._kit_theo = ferramentas_de_codigo(config.repo_alvo, config.cerca_de("Theo"))
+        self._kit_iris = ferramentas_de_codigo(
+            config.repo_alvo, config.cerca_de("Iris"), config.permitir_escrita
+        )
+        self._kit_theo = ferramentas_de_codigo(
+            config.repo_alvo, config.cerca_de("Theo"), config.permitir_escrita
+        )
         self._kits_app = sessoes_de_navegador(
             config.url_do_app,
             config.credenciais or CREDENCIAIS_CONNOSR,
@@ -137,13 +141,28 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
                 kit.limpar_registro()
 
         correcoes = self._texto_das_correcoes()
-        modo = (
-            "Voce PODE editar arquivos do projeto com as ferramentas disponiveis. Faca as "
-            "mudancas de verdade e liste em `arquivos_tocados` os caminhos que editou."
-            if self.state.modo_codigo
-            else "Voce NAO tem acesso ao codigo nesta rodada. Entregue a especificacao "
-            "detalhada da mudanca e deixe `arquivos_tocados` vazio."
-        )
+        if self.state.modo_codigo:
+            modo = (
+                "Voce PODE editar arquivos do projeto. Leia antes de escrever, e faca as "
+                "mudancas de verdade. O campo `arquivos_tocados` e preenchido "
+                "automaticamente pelo registro da ferramenta, nao pelo seu relato."
+            )
+        elif self._kit_iris is not None:
+            modo = (
+                "MODO PROPOSTA. Voce tem ferramentas de LEITURA do projeto (listar, ler e "
+                "buscar), mas NAO pode editar nada - e isso e intencional nesta rodada.\n"
+                "Use a leitura a fundo: antes de propor qualquer coisa, veja como o codigo "
+                "esta hoje. Nao invente nome de arquivo, de componente ou de token: confira. "
+                "Uma proposta que cita o arquivo exato e o trecho exato a mudar vale dez "
+                "vezes mais que uma proposta generica.\n"
+                "Entregue a especificacao detalhada, indicando em `alvo` o caminho real do "
+                "arquivo que precisaria mudar. Deixe `arquivos_tocados` vazio."
+            )
+        else:
+            modo = (
+                "Voce NAO tem acesso ao codigo nesta rodada. Entregue a especificacao "
+                "detalhada da mudanca e deixe `arquivos_tocados` vazio."
+            )
 
         tarefas = []
         for agente, nome, escopo in (

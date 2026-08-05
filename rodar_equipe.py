@@ -36,6 +36,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("foco", nargs="?", default="melhorar a experiencia social do feed de avaliacoes")
     p.add_argument("--repo", type=Path, default=None, help="Raiz do repositorio da rede social")
+    p.add_argument(
+        "--projeto",
+        choices=["connosr"],
+        default=None,
+        help="Usa o preset do projeto (cercas, URL e login ja configurados)",
+    )
+    p.add_argument(
+        "--modo",
+        choices=["proposta", "codigo"],
+        default="proposta",
+        help="proposta: Iris e Theo leem o codigo mas nao editam. codigo: editam de verdade",
+    )
     p.add_argument("--ui", nargs="*", default=[], help="Diretorios de UI que Iris e Theo podem editar")
     p.add_argument("--ui-iris", nargs="*", default=[], help="Cerca so da Iris (sobrepoe --ui para ela)")
     p.add_argument("--ui-theo", nargs="*", default=[], help="Cerca so do Theo (sobrepoe --ui para ele)")
@@ -56,17 +68,28 @@ def main(argv: list[str] | None = None) -> None:
     from equipe.painel.metricas import PainelDeMetricas
     from equipe.painel.servidor import ServidorDoPainel
 
-    config = Config(
-        repo_alvo=args.repo,
-        diretorios_de_ui=list(args.ui),
-        diretorios_de_iris=list(args.ui_iris),
-        diretorios_de_theo=list(args.ui_theo),
-        url_do_app=args.url_app,
+    comuns = dict(
         foco=args.foco,
         max_rodadas=args.rodadas,
+        permitir_escrita=args.modo == "codigo",
         verbose=not args.silencioso,
         porta_do_painel=args.porta,
     )
+    if args.projeto == "connosr":
+        if not args.repo:
+            raise SystemExit("--projeto connosr precisa de --repo apontando para o clone do ConnoSr.")
+        config = Config.para_connosr(
+            args.repo, **({"url_do_app": args.url_app} if args.url_app else {}), **comuns
+        )
+    else:
+        config = Config(
+            repo_alvo=args.repo,
+            diretorios_de_ui=list(args.ui),
+            diretorios_de_iris=list(args.ui_iris),
+            diretorios_de_theo=list(args.ui_theo),
+            url_do_app=args.url_app,
+            **comuns,
+        )
 
     servidor = None
     painel = None
@@ -81,6 +104,14 @@ def main(argv: list[str] | None = None) -> None:
             _demo(painel)
             return
 
+        escrita = "EDITAM os arquivos" if config.modo_codigo else "NAO editam nada (modo proposta)"
+        leitura = "leem o repositorio" if config.pode_ler_codigo else "sem acesso ao codigo"
+        print(f"Foco: {config.foco}")
+        print(f"Iris e Theo: {leitura}, {escrita}")
+        print(
+            "Lila e Rui: "
+            + (f"usam o app em {config.url_do_app}" if config.modo_navegador else "simulam a sessao")
+        )
         for aviso in config.validar():
             print(f"  aviso: {aviso}")
         if not os.getenv("ANTHROPIC_API_KEY"):

@@ -247,31 +247,45 @@ class EscreverArquivo(_ComCerca):
 
 
 class KitDeCodigo:
-    """Ferramentas cercadas de um designer, com o registro do que ele tocou."""
+    """Ferramentas cercadas de um designer, com o registro do que ele tocou.
 
-    def __init__(self, raiz: Path, diretorios: list[str]) -> None:
+    Com `permitir_escrita=False` (modo proposta) a ferramenta de escrita nao e
+    construida. O designer continua lendo e buscando no codigo real - o que faz
+    a proposta dele ser especifica em vez de generica - mas nao ha como editar
+    nada, nem por engano do modelo.
+    """
+
+    def __init__(self, raiz: Path, diretorios: list[str], permitir_escrita: bool = True) -> None:
         cerca = Cerca(raiz, diretorios)
-        self.escrever = EscreverArquivo(cerca)
+        self.permitir_escrita = permitir_escrita
         self.ferramentas: list[BaseTool] = [
             ListarArquivosDeUI(cerca),
             LerArquivo(cerca),
             BuscarNoCodigo(cerca),
-            self.escrever,
         ]
+        self.escrever: EscreverArquivo | None = None
+        if permitir_escrita:
+            self.escrever = EscreverArquivo(cerca)
+            self.ferramentas.append(self.escrever)
 
     def arquivos_tocados(self) -> list[str]:
+        if self.escrever is None:
+            return []
         return [r["arquivo"] for r in self.escrever.arquivos_tocados()]
 
     def limpar_registro(self) -> None:
-        self.escrever.limpar_registro()
+        if self.escrever is not None:
+            self.escrever.limpar_registro()
 
 
-def ferramentas_de_codigo(raiz: Path | None, diretorios: list[str]) -> KitDeCodigo | None:
+def ferramentas_de_codigo(
+    raiz: Path | None, diretorios: list[str], permitir_escrita: bool = True
+) -> KitDeCodigo | None:
     """Monta um kit cercado para um designer.
 
-    Devolve None quando nao ha cerca definida - sem diretorio autorizado, o
-    designer trabalha em modo proposta, que e um caminho legitimo e nao um erro.
+    Devolve None quando nao ha repositorio ou cerca definida - o designer entao
+    trabalha sem ver o codigo, que e um caminho legitimo e nao um erro.
     """
     if not raiz or not diretorios:
         return None
-    return KitDeCodigo(raiz, diretorios)
+    return KitDeCodigo(raiz, diretorios, permitir_escrita)
