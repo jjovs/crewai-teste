@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from crewai import LLM, Agent
+from crewai import Agent
 
 from equipe.config import Config
+from equipe.llm import criar_llm
 
 NOMES = ["Caio", "Vera", "Iris", "Theo", "Lila", "Rui"]
 
@@ -50,8 +51,11 @@ def montar_equipe(
     verdade dentro do app. Quando None, os agentes trabalham em modo proposta /
     simulacao.
     """
-    llm = LLM(model=config.modelo, temperature=0.5)
-    llm_criativo = LLM(model=config.modelo, temperature=0.8)
+    # criar_llm omite `temperature` nos modelos que a recusam (Claude 5+).
+    # Nesses, os dois LLMs ficam equivalentes e a diferenca entre o agente
+    # criativo e o preciso passa a vir so do prompt.
+    llm = criar_llm(config.modelo, 0.5)
+    llm_criativo = criar_llm(config.modelo, 0.8)
     codigo_iris = ferramentas_de_iris or []
     codigo_theo = ferramentas_de_theo or []
     app_lila = ferramentas_de_lila or []

@@ -11,12 +11,17 @@ from dataclasses import dataclass
 
 from crewai import LLM, Agent
 
+from equipe.llm import criar_llm as _criar_llm
+
 MODELO_PADRAO = "anthropic/claude-sonnet-5"
 
 
 def criar_llm() -> LLM:
-    """LLM compartilhado pelo time. Sobrescrevivel via variavel de ambiente."""
-    return LLM(model=os.getenv("CREWAI_MODELO", MODELO_PADRAO), temperature=0.4)
+    """LLM compartilhado pelo time. Sobrescrevivel via variavel de ambiente.
+
+    A temperatura e omitida nos modelos que a recusam - ver equipe/llm.py.
+    """
+    return _criar_llm(os.getenv("CREWAI_MODELO", MODELO_PADRAO), 0.4)
 
 
 def ferramentas_de_pesquisa() -> list:
