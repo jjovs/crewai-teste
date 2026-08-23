@@ -59,6 +59,10 @@ if ($SemPull) {
     if ($LASTEXITCODE -ne 0) { Aviso "git pull falhou; seguindo com o codigo local" }
     else { Ok "em dia com origin/$branch" }
 }
+# Carimba a versao que vai rodar. Sem isso, uma saida colada fora de contexto
+# nao diz se ja inclui o ultimo conserto -- e a rodada leva minutos, entao e
+# facil olhar o resultado de uma rodada anterior achando que e da atual.
+Ok "commit: $(git log --oneline -1)"
 
 # --- 3. A chave ------------------------------------------------------------
 # O .env esta no .gitignore: fica so nesta maquina, nunca vai para o GitHub.
