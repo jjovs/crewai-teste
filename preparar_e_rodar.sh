@@ -99,6 +99,31 @@ else
     ok ".venv ja existe"
 fi
 VENV_PY=".venv/bin/python"
+
+# Um .venv pode existir sem pip. No Debian/Ubuntu o ensurepip vem no pacote
+# python3-venv; sem ele o venv nasce vazio e a primeira chamada ao pip morre
+# com "No module named pip". Um .venv quebrado de uma tentativa anterior da no
+# mesmo. Tratamos os dois casos aqui, do reparo barato ao caro.
+if ! "$VENV_PY" -m pip --version >/dev/null 2>&1; then
+    aviso ".venv sem pip; tentando reparar com ensurepip"
+    if "$VENV_PY" -m ensurepip --upgrade >/dev/null 2>&1; then
+        ok "pip instalado pelo ensurepip"
+    else
+        aviso "ensurepip indisponivel; recriando o .venv do zero"
+        rm -rf .venv
+        "$PY" -m venv .venv >/dev/null 2>&1 || true
+        if ! "$VENV_PY" -m pip --version >/dev/null 2>&1; then
+            versao="$("$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+            erro "o .venv nao tem pip e o ensurepip nao esta disponivel.
+Instale o pacote de venv da sua distro e rode de novo:
+  Debian/Ubuntu:  sudo apt install python${versao}-venv
+  Fedora/RHEL:    sudo dnf install python3-devel
+  Arch:           ja vem junto do pacote python"
+        fi
+        ok ".venv recriado com pip"
+    fi
+fi
+
 "$VENV_PY" -m pip install --upgrade pip --quiet
 "$VENV_PY" -m pip install -r requirements.txt --quiet
 ok "dependencias instaladas"
