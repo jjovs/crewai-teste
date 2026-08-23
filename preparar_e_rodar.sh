@@ -93,6 +93,16 @@ elif [ -t 0 ]; then
     chave="${chave%\~}"
 
     [ -n "$chave" ] || erro "nenhuma chave informada."
+
+    # A leitura e silenciosa, entao quem cola nao ve nada acontecer e tende a
+    # colar de novo -- as copias grudam em um valor so. Barramos isso e damos
+    # o retorno visual que faltava.
+    copias="$(printf '%s' "$chave" | grep -o 'sk-ant-' | wc -l)"
+    if [ "$copias" -gt 1 ]; then
+        erro "a chave foi colada $copias vezes e as copias grudaram.
+A leitura nao mostra nada na tela de proposito -- cole UMA vez e de Enter."
+    fi
+
     case "$chave" in
         sk-ant-*) ;;
         *) erro "a chave nao comeca com 'sk-ant-'. A colagem provavelmente veio
@@ -102,7 +112,8 @@ truncada ou com lixo do terminal. Tente de novo, ou grave o .env a mao:
 
     printf 'ANTHROPIC_API_KEY=%s\n' "$chave" >> .env
     chmod 600 .env
-    ok "chave gravada em .env (permissao 600)"
+    # Confirmacao visivel sem expor o valor: tamanho e as ultimas 4 letras.
+    ok "chave gravada em .env: ${#chave} caracteres, terminando em ...${chave: -4} (permissao 600)"
 else
     erro "sem ANTHROPIC_API_KEY e sem terminal para perguntar.
 Crie o .env manualmente:  echo 'ANTHROPIC_API_KEY=sk-ant-...' >> .env"

@@ -26,6 +26,9 @@ PREFIXO = "sk-ant-"
 # Depois do prefixo a Anthropic usa apenas estes caracteres.
 CORPO_VALIDO = re.compile(r"^[A-Za-z0-9_-]+$")
 COMPRIMENTO_MINIMO = 40
+# Uma chave da Anthropic fica na casa dos 100 caracteres. Bem acima disso
+# significa colagem repetida ou lixo grudado, nao uma chave maior.
+COMPRIMENTO_MAXIMO = 250
 
 
 def diagnosticar(chave: str) -> list[str]:
@@ -62,6 +65,20 @@ def diagnosticar(chave: str) -> list[str]:
         problemas.append(
             f"Curta demais ({len(limpa)} caracteres; o esperado passa de "
             f"{COMPRIMENTO_MINIMO}). A colagem pode ter vindo cortada."
+        )
+
+    repeticoes = limpa.count(PREFIXO)
+    if repeticoes > 1:
+        problemas.append(
+            f"O prefixo '{PREFIXO}' aparece {repeticoes} vezes: a chave foi "
+            "colada mais de uma vez e as copias grudaram em um valor so. "
+            "A leitura da chave e silenciosa por seguranca -- cole UMA vez e "
+            "de Enter, mesmo sem ver nada na tela."
+        )
+    elif len(limpa) > COMPRIMENTO_MAXIMO:
+        problemas.append(
+            f"Longa demais ({len(limpa)} caracteres; o esperado fica perto de "
+            f"100). Provavelmente ha texto extra grudado no valor."
         )
 
     return problemas
