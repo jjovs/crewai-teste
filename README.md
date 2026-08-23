@@ -59,6 +59,22 @@ pip install -r requirements.txt
 
 ## Configuração
 
+### Caminho rápido (Windows)
+
+`preparar_e_rodar.ps1` faz tudo de uma vez: atualiza o repositório, pede a chave
+e grava no `.env`, cria o `.venv`, instala as dependências, clona o ConnoSr,
+confirma que o `python-dotenv` realmente carregou a chave e dispara a rodada.
+Cada etapa é idempotente — rodar de novo não refaz o que já está pronto.
+
+```powershell
+.\preparar_e_rodar.ps1              # prepara e roda
+.\preparar_e_rodar.ps1 -SoPreparar  # só prepara, sem gastar API
+```
+
+O passo a passo manual, para quem preferir, é o resto desta seção.
+
+### Manual
+
 Crie um arquivo `.env` na raiz do projeto com sua chave da Anthropic:
 
 ```
@@ -74,6 +90,11 @@ $env:ANTHROPIC_API_KEY="sk-ant-sua-chave-aqui"
 # Linux/Mac
 export ANTHROPIC_API_KEY="sk-ant-sua-chave-aqui"
 ```
+
+Os dois métodos acima são de máquina local — o `.env` está no `.gitignore` e o
+`$env:` vale só para aquele terminal. Em uma sessão do Claude Code na web, nenhum
+dos dois alcança o container: lá a chave se define nas variáveis de ambiente do
+*environment* remoto ([documentação](https://code.claude.com/docs/en/claude-code-on-the-web)).
 
 ### Variáveis opcionais
 
