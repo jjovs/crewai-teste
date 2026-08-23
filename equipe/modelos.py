@@ -3,6 +3,13 @@
 Cada etapa entrega um objeto Pydantic, nao texto livre. Isso e o que permite ao
 painel medir desempenho de verdade: da para contar criticas por gravidade,
 atritos por severidade e aprovacoes de primeira porque tudo chega tipado.
+
+Regra sobre listas: a lista que E a entrega de uma etapa (ideias, itens da
+pauta, mudancas, interacoes) e obrigatoria -- sem ela a etapa nao aconteceu. As
+listas de apoio (pendencias, adiadas, correcoes, atritos...) tem default vazio,
+porque vazio e uma resposta legitima e porque um campo omitido nao pode derrubar
+uma rodada inteira de varios minutos. `ParecerDaVera.correcoes` e o caso obvio:
+a propria descricao diz "vazio quando aprovado".
 """
 
 from __future__ import annotations
@@ -38,6 +45,7 @@ class CacaDeIdeias(BaseModel):
         description="O fio condutor que conecta as melhores ideias desta leva"
     )
     o_que_nao_copiar: list[str] = Field(
+        default_factory=list,
         description="Padroes das referencias que seriam ruins aqui, e por que"
     )
 
@@ -55,8 +63,8 @@ class ItemDaPauta(BaseModel):
 class PautaDaRodada(BaseModel):
     tema: str = Field(description="O foco desta rodada, em uma frase")
     itens: list[ItemDaPauta] = Field(description="Entre 2 e 5 itens, distribuidos entre Iris e Theo")
-    adiadas: list[str] = Field(description="Ideias boas que ficam para a proxima rodada, com o motivo")
-    recusadas: list[str] = Field(description="Ideias descartadas, com o motivo")
+    adiadas: list[str] = Field(default_factory=list, description="Ideias boas que ficam para a proxima rodada, com o motivo")
+    recusadas: list[str] = Field(default_factory=list, description="Ideias descartadas, com o motivo")
 
 
 # --- Iris e Theo: entrega de design ----------------------------------------
@@ -74,10 +82,11 @@ class EntregaDeDesign(BaseModel):
     escopo: str = Field(description="O recorte que este agente assumiu nesta rodada")
     mudancas: list[MudancaProposta]
     arquivos_tocados: list[str] = Field(
+        default_factory=list,
         description="Caminhos efetivamente editados; vazio quando em modo proposta"
     )
-    decisoes_de_design: list[str] = Field(description="Escolhas feitas e alternativas descartadas")
-    pendencias: list[str] = Field(description="O que ficou por fazer e por que")
+    decisoes_de_design: list[str] = Field(default_factory=list, description="Escolhas feitas e alternativas descartadas")
+    pendencias: list[str] = Field(default_factory=list, description="O que ficou por fazer e por que")
 
 
 # --- Lila e Rui: sessao simulada -------------------------------------------
@@ -103,8 +112,8 @@ class RelatorioDeSessao(BaseModel):
         description="Se as personas usaram o app rodando ou simularam a sessao"
     )
     interacoes: list[Interacao] = Field(description="A sessao em ordem cronologica")
-    atritos: list[Atrito] = Field(description="Do mais grave para o menos grave")
-    momentos_bons: list[str] = Field(description="O que funcionou e deve ser preservado")
+    atritos: list[Atrito] = Field(default_factory=list, description="Do mais grave para o menos grave")
+    momentos_bons: list[str] = Field(default_factory=list, description="O que funcionou e deve ser preservado")
     veredito_das_personas: str = Field(
         description="As duas personas voltariam ao app amanha? Por que?"
     )
@@ -122,9 +131,9 @@ class Correcao(BaseModel):
 
 class ParecerDaVera(BaseModel):
     veredito: Literal["aprovado", "refazer"]
-    itens_atendidos: list[str] = Field(description="Itens da pauta cujo criterio de aceite foi cumprido")
-    itens_nao_atendidos: list[str] = Field(description="Itens que falharam, com o que faltou")
-    correcoes: list[Correcao] = Field(description="Vazio quando aprovado")
+    itens_atendidos: list[str] = Field(default_factory=list, description="Itens da pauta cujo criterio de aceite foi cumprido")
+    itens_nao_atendidos: list[str] = Field(default_factory=list, description="Itens que falharam, com o que faltou")
+    correcoes: list[Correcao] = Field(default_factory=list, description="Vazio quando aprovado")
     nota_da_rodada: int = Field(ge=0, le=10, description="Qualidade geral do trabalho desta rodada")
     justificativa: str
 

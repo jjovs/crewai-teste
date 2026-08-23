@@ -95,7 +95,11 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
                 "Feche com o padrao dominante que conecta as melhores ideias, e com uma lista "
                 "honesta do que dessas referencias seria ruim aqui."
             ),
-            expected_output="Lista estruturada de ideias com referencia, aplicacao, impacto, esforco e risco.",
+            expected_output=(
+                "Tres campos, todos obrigatorios: `ideias` (6 a 10, cada uma com titulo, "
+                "referencia, o_que_e, por_que_aqui, aplicacao, impacto_esperado, esforco e "
+                "risco), `padrao_dominante` (texto) e `o_que_nao_copiar` (lista de textos)."
+            ),
             agent=self._equipe.caio,
             output_pydantic=CacaDeIdeias,
         )
@@ -121,7 +125,11 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
                 "consiga conferir olhando o resultado, nao uma questao de gosto.\n\n"
                 "Diga tambem o que fica adiado e o que voce recusa, sempre com o motivo."
             ),
-            expected_output="Pauta com itens distribuidos entre Iris e Theo, cada um com criterio de aceite.",
+            expected_output=(
+                "Quatro campos: `tema` (texto), `itens` (2 a 5, cada um com ideia, dono, "
+                "entregavel e criterio_de_aceite), `adiadas` e `recusadas` (listas de texto, "
+                "vazias se nao houver)."
+            ),
             agent=self._equipe.vera,
             output_pydantic=PautaDaRodada,
         )
@@ -188,7 +196,12 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
                         "atende e como fica do ponto de vista de quem usa o app.\n\n"
                         f"{correcoes}"
                     ),
-                    expected_output=f"Entrega de design assinada por {nome}, com mudancas e pendencias.",
+                    expected_output=(
+                        f"Seis campos: `autor` ({nome}), `escopo` (texto), `mudancas` (cada "
+                        "uma com alvo, mudanca, justificativa e antes_depois), "
+                        "`arquivos_tocados`, `decisoes_de_design` e `pendencias` (listas de "
+                        "texto, vazias se nao houver)."
+                    ),
                     agent=agente,
                     output_pydantic=EntregaDeDesign,
                 )
@@ -264,7 +277,12 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
                 f"Registre o modo da sessao como "
                 f"'{'app_real' if self.state.modo_navegador else 'simulacao'}'."
             ),
-            expected_output="Relatorio da sessao com interacoes, atritos por gravidade e veredito.",
+            expected_output=(
+                "Cinco campos: `modo`, `interacoes` (cada uma com autor, acao, tela e "
+                "reacao), `atritos` (cada um com quem, onde, problema, gravidade e "
+                "hipotese_de_causa), `momentos_bons` (lista de texto) e "
+                "`veredito_das_personas` (texto)."
+            ),
             agent=self._equipe.rui,
             context=[explorar_lila, reagir_rui, responder_lila],
             output_pydantic=RelatorioDeSessao,
@@ -309,7 +327,12 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
                     else "Seja exigente: ainda ha rodadas disponiveis para corrigir."
                 )
             ),
-            expected_output="Parecer com veredito, itens atendidos e nao atendidos, correcoes e nota.",
+            expected_output=(
+                "Seis campos: `veredito` (aprovado ou refazer), `itens_atendidos` e "
+                "`itens_nao_atendidos` (listas de texto), `correcoes` (cada uma com para, "
+                "o_que, gravidade e origem; vazia quando aprovado), `nota_da_rodada` (0 a 10) "
+                "e `justificativa` (texto)."
+            ),
             agent=self._equipe.vera,
             output_pydantic=ParecerDaVera,
         )
