@@ -50,10 +50,16 @@ class FluxoDaEquipe(Flow[EstadoDaRodada]):
         self._config = config
         self._painel = painel
         self._kit_iris = ferramentas_de_codigo(
-            config.repo_alvo, config.cerca_de("Iris"), config.permitir_escrita
+            config.repo_alvo,
+            config.cerca_de("Iris"),
+            config.permitir_escrita,
+            config.diretorios_de_leitura,
         )
         self._kit_theo = ferramentas_de_codigo(
-            config.repo_alvo, config.cerca_de("Theo"), config.permitir_escrita
+            config.repo_alvo,
+            config.cerca_de("Theo"),
+            config.permitir_escrita,
+            config.diretorios_de_leitura,
         )
         self._kits_app = sessoes_de_navegador(
             config.url_do_app,

@@ -28,6 +28,11 @@ class Config:
     """Caminhos relativos, dentro do repo alvo, que Iris e Theo podem tocar.
     Funciona como cerca: nenhuma escrita acontece fora daqui."""
 
+    diretorios_de_leitura: list[str] = field(default_factory=list)
+    """O que os designers podem LER. Mais largo que a cerca de escrita de
+    proposito: propor mudanca em uma pagina exige abrir os componentes que ela
+    importa. Vazio faz a leitura cair na propria cerca de escrita."""
+
     diretorios_de_iris: list[str] = field(default_factory=list)
     diretorios_de_theo: list[str] = field(default_factory=list)
     """Cercas por designer. Quando preenchidos, a separacao de escopo deixa de
@@ -107,6 +112,7 @@ class Config:
             repo_alvo=repo,
             diretorios_de_theo=["apps/web/src/components", "packages/ui/src"],
             diretorios_de_iris=["apps/web/src/pages", "apps/web/src/layouts"],
+            diretorios_de_leitura=["apps/web/src", "packages/ui/src"],
             url_do_app=kw.pop("url_do_app", "http://localhost:5173"),
             **kw,
         )

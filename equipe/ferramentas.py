@@ -255,17 +255,30 @@ class KitDeCodigo:
     nada, nem por engano do modelo.
     """
 
-    def __init__(self, raiz: Path, diretorios: list[str], permitir_escrita: bool = True) -> None:
-        cerca = Cerca(raiz, diretorios)
+    def __init__(
+        self,
+        raiz: Path,
+        diretorios: list[str],
+        permitir_escrita: bool = True,
+        diretorios_de_leitura: list[str] | None = None,
+    ) -> None:
+        # Ler e escrever tem cercas diferentes de proposito. A cerca de ESCRITA
+        # e estreita: e ela que impede Iris e Theo de colidirem nos mesmos
+        # arquivos. A de LEITURA e larga, porque propor mudanca em `pages/` sem
+        # poder abrir `components/` e impossivel: as paginas importam de la.
+        # Com uma cerca so, o designer procurava um componente que existe,
+        # recebia "nenhuma ocorrencia" e repetia a busca ate saturar o contexto.
+        cerca_de_escrita = Cerca(raiz, diretorios)
+        cerca_de_leitura = Cerca(raiz, diretorios_de_leitura or diretorios)
         self.permitir_escrita = permitir_escrita
         self.ferramentas: list[BaseTool] = [
-            ListarArquivosDeUI(cerca),
-            LerArquivo(cerca),
-            BuscarNoCodigo(cerca),
+            ListarArquivosDeUI(cerca_de_leitura),
+            LerArquivo(cerca_de_leitura),
+            BuscarNoCodigo(cerca_de_leitura),
         ]
         self.escrever: EscreverArquivo | None = None
         if permitir_escrita:
-            self.escrever = EscreverArquivo(cerca)
+            self.escrever = EscreverArquivo(cerca_de_escrita)
             self.ferramentas.append(self.escrever)
 
     def arquivos_tocados(self) -> list[str]:
@@ -279,7 +292,10 @@ class KitDeCodigo:
 
 
 def ferramentas_de_codigo(
-    raiz: Path | None, diretorios: list[str], permitir_escrita: bool = True
+    raiz: Path | None,
+    diretorios: list[str],
+    permitir_escrita: bool = True,
+    diretorios_de_leitura: list[str] | None = None,
 ) -> KitDeCodigo | None:
     """Monta um kit cercado para um designer.
 
@@ -288,4 +304,4 @@ def ferramentas_de_codigo(
     """
     if not raiz or not diretorios:
         return None
-    return KitDeCodigo(raiz, diretorios, permitir_escrita)
+    return KitDeCodigo(raiz, diretorios, permitir_escrita, diretorios_de_leitura)
