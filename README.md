@@ -103,6 +103,7 @@ dos dois alcança o container: lá a chave se define nas variáveis de ambiente 
 | `CREWAI_MODELO` | Troca o modelo do time (padrão: `anthropic/claude-sonnet-5`) |
 | `SERPER_API_KEY` | Ativa busca web real no Pesquisador (requer `pip install crewai-tools`) |
 | `CREWAI_TEMPERATURA` | `0` nunca envia `temperature` à API, `1` sempre. Sem ela, o projeto decide pelo modelo — a família Claude 5 recusa o parâmetro |
+| `CREWAI_MAX_TOKENS` | Teto de saída por resposta (padrão 16000). Abaixo disso, entregas longas voltam truncadas e o CrewAI as lê como vazias |
 
 Sem `SERPER_API_KEY`, o time roda normalmente usando apenas o conhecimento do modelo — e o Pesquisador é instruído a marcar a origem como `conhecimento do modelo`, o que faz o Auditor de Fatos exigir ressalvas no texto em vez de fingir que houve checagem.
 
