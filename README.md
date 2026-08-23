@@ -59,7 +59,20 @@ pip install -r requirements.txt
 
 ## Configuração
 
-### Caminho rápido (Windows)
+### Caminho rápido
+
+Há um script por plataforma, com o mesmo comportamento: `preparar_e_rodar.sh`
+(Linux/macOS) e `preparar_e_rodar.ps1` (Windows).
+
+```bash
+./preparar_e_rodar.sh                # prepara e roda
+./preparar_e_rodar.sh --so-preparar  # só prepara, sem gastar API
+```
+
+No Linux a chave também pode vir do ambiente (`export ANTHROPIC_API_KEY=...`),
+sem `.env`; nesse caso o script apenas confirma e segue.
+
+#### Windows
 
 `preparar_e_rodar.ps1` faz tudo de uma vez: atualiza o repositório, pede a chave
 e grava no `.env`, cria o `.venv`, instala as dependências, clona o ConnoSr,
