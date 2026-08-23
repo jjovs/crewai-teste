@@ -23,9 +23,16 @@ import json
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
 from equipe.config import Config
 from equipe.fluxo import FluxoDaEquipe
 from equipe.painel.metricas import PainelDeMetricas
+
+# Mesma linha que main.py e rodar_equipe.py ja tinham. Sem ela, o .env que o
+# README manda criar era ignorado justamente por este script, e a rodada so
+# quebrava la na frente -- Config.validar() apenas avisa quando a chave falta.
+load_dotenv()
 
 FOCO_PADRAO = "fazer o feed parecer vivo no primeiro acesso"
 

@@ -57,15 +57,36 @@ O hook clona o ConnoSr em `/home/user/connosr` (ajustável por `CONNOSR_REPO`),
 monta o `.venv` e instala o `requirements.txt`. Ele roda **apenas** no ambiente
 remoto — na máquina local sai na primeira linha e não toca em nada.
 
-Ele também informa, logo no começo, se a `ANTHROPIC_API_KEY` está no ambiente.
-Isso não é decoração: `Config.validar()` apenas **avisa** quando a chave falta, em
-vez de abortar, e `rodar_e_capturar.py` não chama `load_dotenv()` (só `main.py` e
-`rodar_equipe.py` chamam) — ou seja, um `.env` não basta para ele. Sem esse aviso
-no início, uma sessão sem chave gastaria o preparo inteiro para só quebrar na
-primeira chamada da API.
+Ele roda em **modo assíncrono**: a sessão abre na hora e o preparo continua ao
+fundo. Em troca existe uma janela em que o `.venv` ainda não está pronto, então
+quem for rodar a equipe espera pelo marcador de conclusão:
 
-A chave precisa vir das variáveis de ambiente do *environment* remoto. Depois de
-defini-la, crie uma sessão nova: sessão já aberta não recebe a variável.
+```bash
+until [ -f .venv/.preparo-ok ]; do sleep 5; done
+```
+
+### A chave
+
+O hook informa, logo na primeira linha, de onde vem a `ANTHROPIC_API_KEY` — ou que
+ela não existe. Isso não é decoração: `Config.validar()` apenas **avisa** quando a
+chave falta, em vez de abortar, então sem esse aviso uma sessão sem chave gastaria
+o preparo inteiro para só quebrar na primeira chamada da API.
+
+Dois caminhos servem, nesta ordem de preferência:
+
+1. **Variáveis de ambiente do *environment* remoto.** Depois de definir, crie uma
+   sessão nova: sessão já aberta não recebe a variável.
+2. **Um `.env` na raiz do projeto**, como o `README.md` sempre mandou. Vale por
+   sessão (o container é novo toda vez), mas não depende de configuração nenhuma.
+
+O caminho 2 estava quebrado justamente para o `rodar_e_capturar.py`, que era o
+único dos três executáveis sem `load_dotenv()`. A chamada foi adicionada.
+
+Quando nenhum dos dois existe, o hook lista os **nomes** (nunca os valores) das
+variáveis visíveis que casam com `ANTHROPIC` ou `TESTE_INJECAO`. Serve para
+separar dois problemas diferentes: defina `TESTE_INJECAO=ok` no environment junto
+com a chave — se nem o sentinela aparecer, nada está sendo injetado e o nome da
+variável não é o culpado.
 
 ## Como rodar
 
