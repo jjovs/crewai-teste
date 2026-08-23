@@ -108,10 +108,15 @@ def main(argv: list[str] | None = None) -> None:
         leitura = "leem o repositorio" if config.pode_ler_codigo else "sem acesso ao codigo"
         print(f"Foco: {config.foco}")
         print(f"Iris e Theo: {leitura}, {escrita}")
-        print(
-            "Lila e Rui: "
-            + (f"usam o app em {config.url_do_app}" if config.modo_navegador else "simulam a sessao")
-        )
+        from equipe.navegador import playwright_disponivel
+
+        if config.modo_navegador and playwright_disponivel():
+            personas = f"usam o app em {config.url_do_app}"
+        elif config.modo_navegador:
+            personas = "simulam a sessao (Playwright nao instalado)"
+        else:
+            personas = "simulam a sessao"
+        print(f"Lila e Rui: {personas}")
         for aviso in config.validar():
             print(f"  aviso: {aviso}")
         if not os.getenv("ANTHROPIC_API_KEY"):
