@@ -52,8 +52,12 @@ Etapa 2 "Atualizando o repositorio"
 if ($SemPull) {
     Aviso "-SemPull: pulando o git pull"
 } else {
-    git pull origin main
-    Ok "em dia com origin/main"
+    # `git pull` sem argumento segue a branch atual. Antes era `git pull origin
+    # main`, que em uma branch de trabalho nao trazia os commits dela.
+    $branch = (git rev-parse --abbrev-ref HEAD).Trim()
+    git pull
+    if ($LASTEXITCODE -ne 0) { Aviso "git pull falhou; seguindo com o codigo local" }
+    else { Ok "em dia com origin/$branch" }
 }
 
 # --- 3. A chave ------------------------------------------------------------
@@ -98,9 +102,11 @@ if (Test-Path $Repo) {
 
 # --- 6. A chave chega mesmo ao processo? -----------------------------------
 # Este e o teste que separa "chave escrita no arquivo" de "chave carregada pelo
-# python-dotenv". Imprime tamanho e prefixo, nunca o valor.
+# python-dotenv". O codigo vive em verificar_chave.py, e nao em `python -c`,
+# porque o Windows PowerShell 5.1 engole aspas duplas ao repassar argumentos
+# para um programa externo -- o codigo chegava quebrado e dava SyntaxError.
 Etapa 6 "Verificando que o python enxerga a chave"
-& $venvPy -c 'from dotenv import load_dotenv; import os, sys; load_dotenv(); k = os.getenv("ANTHROPIC_API_KEY") or ""; print("    tamanho: %d | prefixo sk-ant: %s" % (len(k), k.startswith("sk-ant"))); sys.exit(0 if k else 1)'
+& $venvPy verificar_chave.py
 if ($LASTEXITCODE -ne 0) { throw "python-dotenv nao carregou a ANTHROPIC_API_KEY do .env." }
 Ok "chave visivel para o processo"
 
