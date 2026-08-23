@@ -47,6 +47,26 @@ Não instrumenta nada dentro dos agentes: o `role` de cada um começa pelo nome 
 
 Servidor em biblioteca padrão (`http.server` + SSE), sem FastAPI nem uvicorn.
 
+## Preparo automático no Claude Code na web
+
+O container da sessão é novo toda vez: o clone do alvo e o `.venv` não sobrevivem.
+`.claude/hooks/session-start.sh` refaz os dois no início da sessão, então a rodada
+começa sem quatro minutos de preparo manual.
+
+O hook clona o ConnoSr em `/home/user/connosr` (ajustável por `CONNOSR_REPO`),
+monta o `.venv` e instala o `requirements.txt`. Ele roda **apenas** no ambiente
+remoto — na máquina local sai na primeira linha e não toca em nada.
+
+Ele também informa, logo no começo, se a `ANTHROPIC_API_KEY` está no ambiente.
+Isso não é decoração: `Config.validar()` apenas **avisa** quando a chave falta, em
+vez de abortar, e `rodar_e_capturar.py` não chama `load_dotenv()` (só `main.py` e
+`rodar_equipe.py` chamam) — ou seja, um `.env` não basta para ele. Sem esse aviso
+no início, uma sessão sem chave gastaria o preparo inteiro para só quebrar na
+primeira chamada da API.
+
+A chave precisa vir das variáveis de ambiente do *environment* remoto. Depois de
+defini-la, crie uma sessão nova: sessão já aberta não recebe a variável.
+
 ## Como rodar
 
 ```bash
