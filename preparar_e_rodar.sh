@@ -81,7 +81,25 @@ elif [ -t 0 ]; then
     echo "    .env sem a chave. Cole a chave da Anthropic (comeca com sk-ant-)."
     printf '    ANTHROPIC_API_KEY: '
     read -rs chave; echo
-    [ -n "${chave// /}" ] || erro "nenhuma chave informada."
+
+    # Terminais com bracketed paste mal resolvido entregam \e[200~ e \e[201~
+    # junto com o texto colado. `read -rs` nao passa por readline, entao recebe
+    # os bytes crus e eles acabam gravados dentro da chave -- que passa em
+    # qualquer teste de "nao esta vazia" e so falha na API, com um 401.
+    esc=$'\033'
+    chave="${chave//${esc}\[200~/}"
+    chave="${chave//${esc}\[201~/}"
+    chave="${chave//[$'\r\n\t ']/}"
+    chave="${chave%\~}"
+
+    [ -n "$chave" ] || erro "nenhuma chave informada."
+    case "$chave" in
+        sk-ant-*) ;;
+        *) erro "a chave nao comeca com 'sk-ant-'. A colagem provavelmente veio
+truncada ou com lixo do terminal. Tente de novo, ou grave o .env a mao:
+  printf 'ANTHROPIC_API_KEY=sk-ant-...\\n' > .env" ;;
+    esac
+
     printf 'ANTHROPIC_API_KEY=%s\n' "$chave" >> .env
     chmod 600 .env
     ok "chave gravada em .env (permissao 600)"
